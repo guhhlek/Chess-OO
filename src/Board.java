@@ -1,8 +1,12 @@
+import java.util.Stack;
+
 import javax.swing.JOptionPane;
 
 public class Board {
     public Piece[][] board;
     public ChessColor sideToMove;
+    private Stack<Move> history = new Stack<>();
+
 
     public Board() {
         board = new Piece[8][8];
@@ -56,6 +60,7 @@ public class Board {
             return false;
 
         Piece captured = board[to.row][to.col];
+        history.push(new Move(from, to, p, captured));
 
         board[to.row][to.col] = p;
         board[from.row][from.col] = null;
@@ -71,6 +76,17 @@ public class Board {
         sideToMove = (sideToMove == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE);
         return true;
     }
+
+    public boolean undo() {
+    if (history.isEmpty()) return false;
+
+    Move last = history.pop();
+    board[last.from.row][last.from.col] = last.moved;
+    board[last.to.row][last.to.col] = last.captured;
+
+    sideToMove = (sideToMove == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE);
+    return true;
+}
 
     public Board copy() {
         Board b = new Board(true);
@@ -152,7 +168,7 @@ public class Board {
         }
     }
 
-    private Position findKing(ChessColor color) {
+    public Position findKing(ChessColor color) {
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 Piece p = board[r][c];

@@ -32,6 +32,14 @@ public class ChessUI extends JFrame {
         JPanel panel = new JPanel(new GridLayout(8, 8));
         panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
+        JButton undoBtn = new JButton("↩️ Desfazer");
+        undoBtn.addActionListener(e -> {
+            if (board.undo()) {
+                refresh();
+            }
+        });
+        add(undoBtn, BorderLayout.SOUTH);
+
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 JButton btn = new JButton();
@@ -49,6 +57,12 @@ public class ChessUI extends JFrame {
         add(panel, BorderLayout.CENTER);
         refresh();
 
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                refresh();
+            }
+        });
         setVisible(true);
     }
 
@@ -74,12 +88,14 @@ public class ChessUI extends JFrame {
             }
         } else {
             Position to = new Position(row, col);
-            boolean moved = board.move(selected, to);
+            Position from = selected;
+            boolean moved = board.move(from, to);
 
             resetColors();
             selected = null;
 
             if (moved) {
+                animateMove(from, to, p);
                 refresh();
 
                 turnLabel.setText("Vez das " + (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas"));
@@ -120,30 +136,67 @@ public class ChessUI extends JFrame {
         }
     }
 
-    private String getSymbol(Piece p) {
+    private void animateMove(Position from, Position to, Piece piece) {
+        JButton fromBtn = buttons[from.row][from.col];
+        JButton toBtn = buttons[to.row][to.col];
+
+        Icon icon = fromBtn.getIcon();
+        fromBtn.setIcon(null);
+
+        Timer timer = new Timer(200, e -> {
+            toBtn.setIcon(icon);
+            ((Timer) e.getSource()).stop();
+        });
+        timer.start();
+    }
+
+    private Icon getPieceIcon(Piece p, JButton btn) {
         if (p == null)
-            return "";
+            return null;
+
+        String name = "";
         if (p instanceof King)
-            return p.color == ChessColor.WHITE ? "\u2654" : "\u265A";
+            name = "king";
         if (p instanceof Queen)
-            return p.color == ChessColor.WHITE ? "\u2655" : "\u265B";
+            name = "queen";
         if (p instanceof Rook)
-            return p.color == ChessColor.WHITE ? "\u2656" : "\u265C";
+            name = "rook";
         if (p instanceof Bishop)
-            return p.color == ChessColor.WHITE ? "\u2657" : "\u265D";
+            name = "bishop";
         if (p instanceof Knight)
-            return p.color == ChessColor.WHITE ? "\u2658" : "\u265E";
+            name = "knight";
         if (p instanceof Pawn)
-            return p.color == ChessColor.WHITE ? "\u2659" : "\u265F";
-        return "";
+            name = "pawn";
+
+        String path = "images/" + (p.color == ChessColor.WHITE ? "white_" : "black_") + name + ".png";
+        ImageIcon icon = new ImageIcon(path);
+
+        int w = btn.getWidth();
+        int h = btn.getHeight();
+
+        if (w <= 0 || h <= 0)
+            return icon;
+
+        Image scaled = icon.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaled);
     }
 
     private void refresh() {
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 Piece p = board.at(r, c);
-                buttons[r][c].setText(getSymbol(p));
+                buttons[r][c].setIcon(getPieceIcon(p, buttons[r][c]));
+            }
+        }
+
+        for (ChessColor color : ChessColor.values()) {
+            if (board.inCheck(color)) {
+                Position kingPos = board.findKing(color);
+                if (kingPos != null) {
+                    buttons[kingPos.row][kingPos.col].setBackground(Color.RED);
+                }
             }
         }
     }
+
 }
