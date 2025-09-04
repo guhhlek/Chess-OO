@@ -8,6 +8,8 @@ public class ChessUI extends JFrame {
     private JLabel turnLabel;
     private final Color lightColor = new Color(240, 217, 181);
     private final Color darkColor = new Color(181, 136, 99);
+    private boolean vsAI = false;
+    private JButton aiBtn;
 
     public ChessUI() {
         this(new Board());
@@ -32,13 +34,24 @@ public class ChessUI extends JFrame {
         JPanel panel = new JPanel(new GridLayout(8, 8));
         panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
         JButton undoBtn = new JButton("↩️ Desfazer");
         undoBtn.addActionListener(e -> {
             if (board.undo()) {
                 refresh();
             }
         });
-        add(undoBtn, BorderLayout.SOUTH);
+        bottomPanel.add(undoBtn);
+
+        aiBtn = new JButton("🤖 Ativar IA");
+        aiBtn.addActionListener(e -> {
+            vsAI = !vsAI;
+            aiBtn.setText(vsAI ? "🤖 IA Ativada" : "🤖 Ativar IA");
+        });
+        bottomPanel.add(aiBtn);
+
+        add(bottomPanel, BorderLayout.SOUTH);
 
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
@@ -126,6 +139,28 @@ public class ChessUI extends JFrame {
                 }
             }
         }
+
+        if (vsAI && board.sideToMove == ChessColor.BLACK) {
+            makeAIMove();
+        }
+    }
+
+    private void makeAIMove() {
+        java.util.List<Move> moves = board.getAllLegalMoves(board.sideToMove);
+        if (moves.isEmpty())
+            return;
+
+        Move move = moves.get(new java.util.Random().nextInt(moves.size()));
+
+        Piece p = board.at(move.from.row, move.from.col);
+        board.move(move.from, move.to);
+
+        animateMove(move.from, move.to, p);
+        refresh();
+
+        turnLabel.setText("Vez das " + (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas"));
+        turnLabel.setBackground(
+                board.sideToMove == ChessColor.WHITE ? new Color(200, 230, 255) : new Color(255, 200, 200));
     }
 
     private void resetColors() {

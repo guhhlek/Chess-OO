@@ -7,7 +7,6 @@ public class Board {
     public ChessColor sideToMove;
     private Stack<Move> history = new Stack<>();
 
-
     public Board() {
         board = new Piece[8][8];
         setup();
@@ -78,15 +77,16 @@ public class Board {
     }
 
     public boolean undo() {
-    if (history.isEmpty()) return false;
+        if (history.isEmpty())
+            return false;
 
-    Move last = history.pop();
-    board[last.from.row][last.from.col] = last.moved;
-    board[last.to.row][last.to.col] = last.captured;
+        Move last = history.pop();
+        board[last.from.row][last.from.col] = last.moved;
+        board[last.to.row][last.to.col] = last.captured;
 
-    sideToMove = (sideToMove == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE);
-    return true;
-}
+        sideToMove = (sideToMove == ChessColor.WHITE ? ChessColor.BLACK : ChessColor.WHITE);
+        return true;
+    }
 
     public Board copy() {
         Board b = new Board(true);
@@ -117,6 +117,24 @@ public class Board {
             }
         }
         return false;
+    }
+
+    public java.util.List<Move> getAllLegalMoves(ChessColor color) {
+        java.util.List<Move> moves = new java.util.ArrayList<>();
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = at(r, c);
+                if (p != null && p.color == color) {
+                    for (Position to : p.legalTargets(this, new Position(r, c))) {
+                        Board copy = this.copy();
+                        if (copy.move(new Position(r, c), to) && !copy.inCheck(color)) {
+                            moves.add(new Move(new Position(r, c), to, p, at(to.row, to.col)));
+                        }
+                    }
+                }
+            }
+        }
+        return moves;
     }
 
     public boolean isCheckmate(ChessColor color) {
