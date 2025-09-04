@@ -1,5 +1,11 @@
+package ui;
+
+import ai.*;
+import model.*;
+
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class ChessUI extends JFrame {
     private JButton[][] buttons = new JButton[8][8];
@@ -10,39 +16,61 @@ public class ChessUI extends JFrame {
     private final Color darkColor = new Color(181, 136, 99);
     private boolean vsAI = false;
     private JButton aiBtn;
+    private ChessAI aiPlayer;
 
     public ChessUI() {
         this(new Board());
     }
 
-    public ChessUI(Board b) {
+    public ChessUI(Board board) {
         super("♟️ Xadrez");
-        this.board = b;
+        this.board = board;
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(720, 760);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(8, 8));
 
+        initTurnLabel();
+        initBottomPanel();
+        initBoardGrid();
+
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                refresh();
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void initTurnLabel() {
         turnLabel = new JLabel("Vez das Brancas", SwingConstants.CENTER);
         turnLabel.setFont(new Font("Arial", Font.BOLD, 18));
         turnLabel.setOpaque(true);
         turnLabel.setBackground(Color.LIGHT_GRAY);
         turnLabel.setPreferredSize(new Dimension(100, 40));
         add(turnLabel, BorderLayout.NORTH);
+    }
 
-        JPanel panel = new JPanel(new GridLayout(8, 8));
-        panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-
+    private void initBottomPanel() {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
         JButton undoBtn = new JButton("↩️ Desfazer");
         undoBtn.addActionListener(e -> {
-            if (board.undo()) {
+            if (board.undo())
                 refresh();
-            }
         });
         bottomPanel.add(undoBtn);
+
+        JButton easyBtn = new JButton("🤖 Fácil");
+        easyBtn.addActionListener(e -> aiPlayer = new EasyAI(ChessColor.BLACK));
+        bottomPanel.add(easyBtn);
+
+        JButton mediumBtn = new JButton("🤖 Médio");
+        mediumBtn.addActionListener(e -> aiPlayer = new MediumAI(ChessColor.BLACK));
+        bottomPanel.add(mediumBtn);
 
         aiBtn = new JButton("🤖 Ativar IA");
         aiBtn.addActionListener(e -> {
@@ -52,16 +80,19 @@ public class ChessUI extends JFrame {
         bottomPanel.add(aiBtn);
 
         add(bottomPanel, BorderLayout.SOUTH);
+    }
+
+    private void initBoardGrid() {
+        JPanel panel = new JPanel(new GridLayout(8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 JButton btn = new JButton();
                 btn.setFont(new Font("SansSerif", Font.PLAIN, 36));
                 btn.setBackground((r + c) % 2 == 0 ? lightColor : darkColor);
-
                 final int row = r, col = c;
                 btn.addActionListener(e -> handleClick(row, col));
-
                 buttons[r][c] = btn;
                 panel.add(btn);
             }
@@ -69,14 +100,6 @@ public class ChessUI extends JFrame {
 
         add(panel, BorderLayout.CENTER);
         refresh();
-
-        addComponentListener(new java.awt.event.ComponentAdapter() {
-            @Override
-            public void componentResized(java.awt.event.ComponentEvent e) {
-                refresh();
-            }
-        });
-        setVisible(true);
     }
 
     private void handleClick(int row, int col) {
@@ -86,10 +109,10 @@ public class ChessUI extends JFrame {
             if (p == null)
                 return;
 
-            if (p.color != board.sideToMove) {
+            if (p.getColor() != board.getSideToMove()) {
                 JOptionPane.showMessageDialog(this,
                         "Não, é a vez das " +
-                                (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
+                                (board.getSideToMove() == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
                 return;
             }
 
@@ -111,15 +134,16 @@ public class ChessUI extends JFrame {
                 animateMove(from, to, p);
                 refresh();
 
-                turnLabel.setText("Vez das " + (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas"));
+                turnLabel.setText("Vez das " + (board.getSideToMove() == ChessColor.WHITE ? "Brancas" : "Pretas"));
                 turnLabel.setBackground(
-                        board.sideToMove == ChessColor.WHITE ? new Color(200, 230, 255) : new Color(255, 200, 200));
+                        board.getSideToMove() == ChessColor.WHITE ? new Color(200, 230, 255)
+                                : new Color(255, 200, 200));
 
-                if (board.inCheck(board.sideToMove)) {
-                    if (board.isCheckmate(board.sideToMove)) {
+                if (board.inCheck(board.getSideToMove())) {
+                    if (board.isCheckmate(board.getSideToMove())) {
                         JOptionPane.showMessageDialog(this,
                                 "Cheque-mate! " +
-                                        (board.sideToMove == ChessColor.WHITE ? "Pretas" : "Brancas") +
+                                        (board.getSideToMove() == ChessColor.WHITE ? "Pretas" : "Brancas") +
                                         " venceram!");
 
                         board = new Board();
@@ -129,46 +153,33 @@ public class ChessUI extends JFrame {
                     } else {
                         JOptionPane.showMessageDialog(this,
                                 "Cheque nas " +
-                                        (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
+                                        (board.getSideToMove() == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
                     }
                 }
 
-                if (board.inCheck(board.sideToMove)) {
+                if (board.inCheck(board.getSideToMove())) {
                     JOptionPane.showMessageDialog(this,
                             "Você está em cheque! Só pode mover peças que tirem o rei do cheque.");
                 }
             }
         }
 
-        if (vsAI && board.sideToMove == ChessColor.BLACK) {
+        if (vsAI && board.getSideToMove() == ChessColor.BLACK) {
             makeAIMove();
         }
     }
 
-    private void makeAIMove() {
-        java.util.List<Move> moves = board.getAllLegalMoves(board.sideToMove);
-        if (moves.isEmpty())
-            return;
-
-        Move move = moves.get(new java.util.Random().nextInt(moves.size()));
-
-        Piece p = board.at(move.from.row, move.from.col);
-        board.move(move.from, move.to);
-
-        animateMove(move.from, move.to, p);
-        refresh();
-
-        turnLabel.setText("Vez das " + (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas"));
-        turnLabel.setBackground(
-                board.sideToMove == ChessColor.WHITE ? new Color(200, 230, 255) : new Color(255, 200, 200));
+    private void highlightSelectedAndMoves(Position selected, List<Position> moves) {
+        buttons[selected.row][selected.col].setBackground(new Color(235, 240, 139));
+        for (Position move : moves) {
+            buttons[move.row][move.col].setBackground(new Color(182, 245, 182));
+        }
     }
 
     private void resetColors() {
-        for (int r = 0; r < 8; r++) {
-            for (int c = 0; c < 8; c++) {
+        for (int r = 0; r < 8; r++)
+            for (int c = 0; c < 8; c++)
                 buttons[r][c].setBackground((r + c) % 2 == 0 ? lightColor : darkColor);
-            }
-        }
     }
 
     private void animateMove(Position from, Position to, Piece piece) {
@@ -189,26 +200,21 @@ public class ChessUI extends JFrame {
         if (p == null)
             return null;
 
-        String name = "";
-        if (p instanceof King)
-            name = "king";
-        if (p instanceof Queen)
-            name = "queen";
-        if (p instanceof Rook)
-            name = "rook";
-        if (p instanceof Bishop)
-            name = "bishop";
-        if (p instanceof Knight)
-            name = "knight";
-        if (p instanceof Pawn)
-            name = "pawn";
+        String name = switch (p.getClass().getSimpleName()) {
+            case "King" -> "king";
+            case "Queen" -> "queen";
+            case "Rook" -> "rook";
+            case "Bishop" -> "bishop";
+            case "Knight" -> "knight";
+            case "Pawn" -> "pawn";
+            default -> "";
+        };
 
-        String path = "images/" + (p.color == ChessColor.WHITE ? "white_" : "black_") + name + ".png";
+        String path = "images/" + (p.getColor() == ChessColor.WHITE ? "white_" : "black_") + name + ".png";
         ImageIcon icon = new ImageIcon(path);
 
         int w = btn.getWidth();
         int h = btn.getHeight();
-
         if (w <= 0 || h <= 0)
             return icon;
 
@@ -217,21 +223,38 @@ public class ChessUI extends JFrame {
     }
 
     private void refresh() {
-        for (int r = 0; r < 8; r++) {
-            for (int c = 0; c < 8; c++) {
-                Piece p = board.at(r, c);
-                buttons[r][c].setIcon(getPieceIcon(p, buttons[r][c]));
-            }
-        }
+        for (int r = 0; r < 8; r++)
+            for (int c = 0; c < 8; c++)
+                buttons[r][c].setIcon(getPieceIcon(board.at(r, c), buttons[r][c]));
 
         for (ChessColor color : ChessColor.values()) {
             if (board.inCheck(color)) {
                 Position kingPos = board.findKing(color);
-                if (kingPos != null) {
+                if (kingPos != null)
                     buttons[kingPos.row][kingPos.col].setBackground(Color.RED);
-                }
             }
         }
     }
 
+    private void updateTurnLabel() {
+        turnLabel.setText("Vez das " + (board.getSideToMove() == ChessColor.WHITE ? "Brancas" : "Pretas"));
+        turnLabel.setBackground(
+                board.getSideToMove() == ChessColor.WHITE ? new Color(200, 230, 255) : new Color(255, 200, 200));
+    }
+
+    private void makeAIMove() {
+        if (aiPlayer == null)
+            return;
+
+        Move move = aiPlayer.chooseMove(board);
+        if (move == null)
+            return;
+
+        Piece p = board.at(move.from.row, move.from.col);
+        board.move(move.from, move.to);
+
+        animateMove(move.from, move.to, p);
+        refresh();
+        updateTurnLabel();
+    }
 }

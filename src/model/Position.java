@@ -1,6 +1,8 @@
+package model;
+
 public class Position {
-    public final int row;
-    public final int col;
+    public int row;
+    public int col;
 
     public Position(int row, int col) {
         this.row = row;

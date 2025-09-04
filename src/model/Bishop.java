@@ -1,14 +1,15 @@
+package model;
 import java.util.*;
 
-public class Rook extends Piece {
-    public Rook(ChessColor color) {
+public class Bishop extends Piece {
+    public Bishop(ChessColor color) {
         super(color);
     }
 
     @Override
     public List<Position> legalTargets(Board board, Position from) {
         List<Position> moves = new ArrayList<>();
-        int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+        int[][] dirs = { { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } };
 
         for (int[] d : dirs) {
             int r = from.row + d[0];
@@ -31,6 +32,6 @@ public class Rook extends Piece {
 
     @Override
     public Piece clone() {
-        return new Rook(this.color);
+        return new Bishop(this.color);
     }
 }
