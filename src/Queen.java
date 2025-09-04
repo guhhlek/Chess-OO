@@ -12,4 +12,9 @@ public class Queen extends Piece {
         moves.addAll(new Bishop(color).legalTargets(board, from));
         return moves;
     }
+
+    @Override
+    public Piece clone() {
+        return new Queen(this.color);
+    }
 }

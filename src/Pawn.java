@@ -11,18 +11,15 @@ public class Pawn extends Piece {
         int dir = color == ChessColor.WHITE ? -1 : 1;
         int startRow = color == ChessColor.WHITE ? 6 : 1;
 
-        // mover 1 casa
         int r = from.row + dir;
         if (r >= 0 && r < 8 && board.at(r, from.col) == null) {
             moves.add(new Position(r, from.col));
 
-            // mover 2 casas do início
             if (from.row == startRow && board.at(r + dir, from.col) == null) {
                 moves.add(new Position(r + dir, from.col));
             }
         }
 
-        // capturas
         if (from.col > 0) {
             Piece p = board.at(r, from.col - 1);
             if (p != null && p.color != color)
@@ -35,5 +32,10 @@ public class Pawn extends Piece {
         }
 
         return moves;
+    }
+
+    @Override
+    public Piece clone() {
+        return new Pawn(this.color);
     }
 }

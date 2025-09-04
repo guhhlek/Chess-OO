@@ -22,4 +22,9 @@ public class Knight extends Piece {
         }
         return moves;
     }
+
+    @Override
+    public Piece clone() {
+        return new Knight(this.color);
+    }
 }

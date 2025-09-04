@@ -22,4 +22,9 @@ public class King extends Piece {
         }
         return moves;
     }
+
+    @Override
+    public Piece clone() {
+        return new King(this.color);
+    }
 }
