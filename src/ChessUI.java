@@ -62,15 +62,15 @@ public class ChessUI extends JFrame {
             if (p.color != board.sideToMove) {
                 JOptionPane.showMessageDialog(this,
                         "Não, é a vez das " +
-                                (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Negras") + "!");
+                                (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
                 return;
             }
 
             selected = new Position(row, col);
-            buttons[row][col].setBackground(new Color(163, 102, 189));
+            buttons[row][col].setBackground(new Color(235, 240, 139));
 
             for (Position move : p.legalTargets(board, selected)) {
-                buttons[move.row][move.col].setBackground(new Color(144, 238, 144));
+                buttons[move.row][move.col].setBackground(new Color(182, 245, 182));
             }
         } else {
             Position to = new Position(row, col);
@@ -82,7 +82,7 @@ public class ChessUI extends JFrame {
             if (moved) {
                 refresh();
 
-                turnLabel.setText("Vez das " + (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Negras"));
+                turnLabel.setText("Vez das " + (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas"));
                 turnLabel.setBackground(
                         board.sideToMove == ChessColor.WHITE ? new Color(200, 230, 255) : new Color(255, 200, 200));
 
@@ -90,7 +90,7 @@ public class ChessUI extends JFrame {
                     if (board.isCheckmate(board.sideToMove)) {
                         JOptionPane.showMessageDialog(this,
                                 "Cheque-mate! " +
-                                        (board.sideToMove == ChessColor.WHITE ? "Negras" : "Brancas") +
+                                        (board.sideToMove == ChessColor.WHITE ? "Pretas" : "Brancas") +
                                         " venceram!");
 
                         board = new Board();
@@ -100,7 +100,7 @@ public class ChessUI extends JFrame {
                     } else {
                         JOptionPane.showMessageDialog(this,
                                 "Cheque nas " +
-                                        (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Negras") + "!");
+                                        (board.sideToMove == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
                     }
                 }
 
