@@ -5,7 +5,6 @@ import model.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 public class ChessUI extends JFrame {
     private JButton[][] buttons = new JButton[8][8];
@@ -55,33 +54,112 @@ public class ChessUI extends JFrame {
     }
 
     private void showStartupMenu() {
-        int vsAIOption = JOptionPane.showConfirmDialog(
-                this,
-                "Deseja jogar contra a IA?",
-                "Modo de Jogo",
-                JOptionPane.YES_NO_OPTION);
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(245, 245, 245));
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
-        if (vsAIOption == JOptionPane.YES_OPTION) {
+        JLabel label = new JLabel("Deseja jogar contra a IA?");
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setFont(new Font("Arial", Font.BOLD, 24));
+        label.setForeground(new Color(50, 50, 50));
+        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
+        panel.add(label);
+
+        JButton vsAIButton = new JButton("Sim");
+        JButton manualButton = new JButton("Não");
+
+        vsAIButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        manualButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        vsAIButton.setFont(new Font("Arial", Font.PLAIN, 18));
+        manualButton.setFont(new Font("Arial", Font.PLAIN, 18));
+
+        vsAIButton.setBackground(new Color(100, 200, 100));
+        vsAIButton.setForeground(Color.WHITE);
+        manualButton.setBackground(new Color(200, 100, 100));
+        manualButton.setForeground(Color.WHITE);
+
+        vsAIButton.setFocusPainted(false);
+        manualButton.setFocusPainted(false);
+
+        panel.add(vsAIButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
+        panel.add(manualButton);
+
+        JDialog dialog = new JDialog(this, "Modo de Jogo", true);
+        dialog.setContentPane(panel);
+        dialog.setMinimumSize(new Dimension(400, 250));
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+
+        vsAIButton.addActionListener(e -> {
             vsAI = true;
+            dialog.dispose();
+            showDifficultyMenu();
+        });
 
-            Object[] difficulties = { "Fácil", "Médio", "Difícil" };
-            String choice = (String) JOptionPane.showInputDialog(
-                    this,
-                    "Selecione a dificuldade:",
-                    "Dificuldade da IA",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    difficulties,
-                    difficulties[0]);
+        manualButton.addActionListener(e -> {
+            vsAI = false;
+            dialog.dispose();
+        });
 
-            if ("Fácil".equals(choice)) {
-                aiPlayer = new EasyAI(ChessColor.BLACK);
-            } else if ("Médio".equals(choice)) {
-                aiPlayer = new MediumAI(ChessColor.BLACK);
-            } else if ("Difícil".equals(choice)) {
-                aiPlayer = new HardAI(ChessColor.BLACK);
-            }
+        dialog.setVisible(true);
+    }
+
+    private void showDifficultyMenu() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(new Color(245, 245, 245));
+        panel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        JLabel label = new JLabel("Selecione a dificuldade:");
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setFont(new Font("Arial", Font.BOLD, 24));
+        label.setForeground(new Color(50, 50, 50));
+        label.setBorder(BorderFactory.createEmptyBorder(0, 0, 25, 0));
+        panel.add(label);
+
+        JButton easyBtn = new JButton("Fácil");
+        JButton mediumBtn = new JButton("Médio");
+        JButton hardBtn = new JButton("Difícil");
+
+        JButton[] buttons = { easyBtn, mediumBtn, hardBtn };
+        Color[] colors = { new Color(100, 200, 100), new Color(255, 165, 0), new Color(200, 50, 50) };
+
+        for (int i = 0; i < buttons.length; i++) {
+            JButton btn = buttons[i];
+            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setFont(new Font("Arial", Font.PLAIN, 18));
+            btn.setBackground(colors[i]);
+            btn.setForeground(Color.WHITE);
+            btn.setFocusPainted(false);
+            panel.add(btn);
+            panel.add(Box.createRigidArea(new Dimension(0, 15)));
         }
+
+        JDialog dialog = new JDialog(this, "Dificuldade da IA", true);
+        dialog.setContentPane(panel);
+        dialog.setMinimumSize(new Dimension(400, 300));
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+
+        easyBtn.addActionListener(e -> {
+            aiPlayer = new EasyAI(ChessColor.BLACK);
+            dialog.dispose();
+        });
+
+        mediumBtn.addActionListener(e -> {
+            aiPlayer = new MediumAI(ChessColor.BLACK);
+            dialog.dispose();
+        });
+
+        hardBtn.addActionListener(e -> {
+            aiPlayer = new HardAI(ChessColor.BLACK);
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
     }
 
     private void initBottomPanel() {
@@ -126,8 +204,7 @@ public class ChessUI extends JFrame {
 
             if (p.getColor() != board.getSideToMove()) {
                 JOptionPane.showMessageDialog(this,
-                        "Não, é a vez das " +
-                                (board.getSideToMove() == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
+                        "É a vez das " + (board.getSideToMove() == ChessColor.WHITE ? "Brancas" : "Pretas") + "!");
                 return;
             }
 
@@ -140,6 +217,7 @@ public class ChessUI extends JFrame {
         } else {
             Position to = new Position(row, col);
             Position from = selected;
+
             boolean moved = board.move(from, to);
 
             resetColors();
@@ -172,9 +250,10 @@ public class ChessUI extends JFrame {
                     }
                 }
 
+            } else {
                 if (board.inCheck(board.getSideToMove())) {
                     JOptionPane.showMessageDialog(this,
-                            "Você está em cheque! Só pode mover peças que tirem o rei do cheque.");
+                            "Você não pode mover essa peça! Seu rei ficaria em cheque.");
                 }
             }
         }
