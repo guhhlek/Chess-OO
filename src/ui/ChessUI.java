@@ -15,7 +15,6 @@ public class ChessUI extends JFrame {
     private final Color lightColor = new Color(240, 217, 181);
     private final Color darkColor = new Color(181, 136, 99);
     private boolean vsAI = false;
-    private JButton aiBtn;
     private ChessAI aiPlayer;
 
     public ChessUI() {
@@ -32,6 +31,7 @@ public class ChessUI extends JFrame {
         setLayout(new BorderLayout(8, 8));
 
         initTurnLabel();
+        showStartupMenu();
         initBottomPanel();
         initBoardGrid();
 
@@ -54,6 +54,36 @@ public class ChessUI extends JFrame {
         add(turnLabel, BorderLayout.NORTH);
     }
 
+    private void showStartupMenu() {
+        int vsAIOption = JOptionPane.showConfirmDialog(
+                this,
+                "Deseja jogar contra a IA?",
+                "Modo de Jogo",
+                JOptionPane.YES_NO_OPTION);
+
+        if (vsAIOption == JOptionPane.YES_OPTION) {
+            vsAI = true;
+
+            Object[] difficulties = { "Fácil", "Médio", "Difícil" };
+            String choice = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Selecione a dificuldade:",
+                    "Dificuldade da IA",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    difficulties,
+                    difficulties[0]);
+
+            if ("Fácil".equals(choice)) {
+                aiPlayer = new EasyAI(ChessColor.BLACK);
+            } else if ("Médio".equals(choice)) {
+                aiPlayer = new MediumAI(ChessColor.BLACK);
+            } else if ("Difícil".equals(choice)) {
+                aiPlayer = new HardAI(ChessColor.BLACK);
+            }
+        }
+    }
+
     private void initBottomPanel() {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
@@ -63,21 +93,6 @@ public class ChessUI extends JFrame {
                 refresh();
         });
         bottomPanel.add(undoBtn);
-
-        JButton easyBtn = new JButton("🤖 Fácil");
-        easyBtn.addActionListener(e -> aiPlayer = new EasyAI(ChessColor.BLACK));
-        bottomPanel.add(easyBtn);
-
-        JButton mediumBtn = new JButton("🤖 Médio");
-        mediumBtn.addActionListener(e -> aiPlayer = new MediumAI(ChessColor.BLACK));
-        bottomPanel.add(mediumBtn);
-
-        aiBtn = new JButton("🤖 Ativar IA");
-        aiBtn.addActionListener(e -> {
-            vsAI = !vsAI;
-            aiBtn.setText(vsAI ? "🤖 IA Ativada" : "🤖 Ativar IA");
-        });
-        bottomPanel.add(aiBtn);
 
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -166,13 +181,6 @@ public class ChessUI extends JFrame {
 
         if (vsAI && board.getSideToMove() == ChessColor.BLACK) {
             makeAIMove();
-        }
-    }
-
-    private void highlightSelectedAndMoves(Position selected, List<Position> moves) {
-        buttons[selected.row][selected.col].setBackground(new Color(235, 240, 139));
-        for (Position move : moves) {
-            buttons[move.row][move.col].setBackground(new Color(182, 245, 182));
         }
     }
 
